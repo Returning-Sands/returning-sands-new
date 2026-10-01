@@ -69,7 +69,7 @@ export function BoardingPass({
 
       {/* Tear-off stub */}
       <div
-        className={`relative flex shrink-0 flex-col items-center justify-center gap-1 border-l-2 border-dashed border-ink text-center text-[0.65rem] uppercase tracking-[0.18em] ${compact ? "w-20 p-2" : "w-28 p-4"}`}
+        className={`relative flex shrink-0 flex-col items-center justify-center gap-1 border-s-2 border-dashed border-ink text-center text-[0.65rem] uppercase tracking-[0.18em] ${compact ? "w-20 p-2" : "w-28 p-4"}`}
       >
         {codeText ? <span className="font-semibold">{codeText}</span> : null}
         <span>{routeText(from, to)}</span>

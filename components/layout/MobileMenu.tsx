@@ -68,7 +68,7 @@ export function MobileMenu({ items, current }: MobileMenuProps) {
       {open && (
         <ul
           id="mobile-menu"
-          className="absolute right-0 top-full z-40 mt-2 flex min-w-56 flex-col border border-ink bg-sand-50 p-2 shadow-lg"
+          className="absolute end-0 top-full z-40 mt-2 flex min-w-56 flex-col border border-ink bg-sand-50 p-2 shadow-lg"
         >
           {items.map((item) => {
             const isCurrent = current === item.href;

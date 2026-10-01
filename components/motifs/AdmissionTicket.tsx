@@ -59,7 +59,7 @@ export function AdmissionTicket({
   );
 
   const stub = (
-    <div className="relative flex flex-col justify-center gap-2 border-l-2 border-dashed border-ink pl-5 md:w-56">
+    <div className="relative flex flex-col justify-center gap-2 border-s-2 border-dashed border-ink ps-5 md:w-56">
       <span aria-hidden="true" className="font-mono text-[0.6rem] uppercase tracking-[0.3em] text-nile-700">
         tear here
       </span>

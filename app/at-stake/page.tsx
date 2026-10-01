@@ -36,7 +36,7 @@ export default function AtStakePage() {
       {/* Framing quote: the first content element after the h1 (Req 4.1). The
           attribution lives in <figcaption><cite> so assistive tech reads it
           as the source of the blockquote, not as body copy. */}
-      <figure className="mt-12 border-l-4 border-stamp-500 pl-6">
+      <figure className="mt-12 border-s-4 border-stamp-500 ps-6">
         <blockquote className="font-display text-xl italic leading-relaxed md:text-2xl">
           <p>{quote}</p>
         </blockquote>

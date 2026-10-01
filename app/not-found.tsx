@@ -10,7 +10,7 @@ export const metadata = pageMetadata("notFound", "/404", { noindex: true });
 
 export default function NotFound() {
   return (
-    <section className="mx-auto flex max-w-3xl flex-col items-center gap-8 px-4 py-16 text-center md:flex-row md:text-left">
+    <section className="mx-auto flex max-w-3xl flex-col items-center gap-8 px-4 py-16 text-center md:flex-row md:text-start">
       <Stamp overprint="DENIED" tilt="-6deg" size={200} className="shrink-0" />
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">

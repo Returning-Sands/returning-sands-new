@@ -122,7 +122,7 @@ const ICON = {
   strokeWidth: "1.75",
   strokeLinecap: "round",
   strokeLinejoin: "round",
-  className: "mr-2 inline-block align-text-bottom",
+  className: "me-2 inline-block align-text-bottom",
 } as const;
 
 function InstagramIcon() {

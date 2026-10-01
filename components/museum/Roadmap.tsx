@@ -10,7 +10,7 @@ import type { MuseumContent } from "@/lib/types";
 // the background, never the words (Req 20.9).
 export function Roadmap({ stages, className = "" }: { stages: MuseumContent["roadmap"]; className?: string }) {
   return (
-    <ol className={`relative flex list-none flex-col gap-10 border-l-2 border-dashed border-ink p-0 pl-8 ${className}`}>
+    <ol className={`relative flex list-none flex-col gap-10 border-s-2 border-dashed border-ink p-0 ps-8 ${className}`}>
       {stages.map((stage, i) => {
         const current = stage.current === true;
         return (

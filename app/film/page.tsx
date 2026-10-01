@@ -98,7 +98,7 @@ export default function FilmPage() {
         </h2>
         <ul className="flex flex-col gap-4 text-lg leading-relaxed">
           {backing.map((item) => (
-            <li key={item.name} className="border-l-2 border-ink pl-4">
+            <li key={item.name} className="border-s-2 border-ink ps-4">
               <strong className="font-mono font-semibold">{item.name}</strong> — {item.detail}
             </li>
           ))}

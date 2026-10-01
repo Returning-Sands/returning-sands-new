@@ -17,7 +17,7 @@ export default function MuseumThanksPage() {
     <section className="mx-auto max-w-3xl px-4 py-16 md:py-24">
       {/* A stamped ticket: the `.perf` edge from the Admission_Ticket plus the
           oval stamp carrying an ADMITTED sub-label. */}
-      <div className="perf relative flex flex-col items-center gap-8 border border-ink bg-sand-100 p-8 text-center text-ink md:flex-row md:text-left">
+      <div className="perf relative flex flex-col items-center gap-8 border border-ink bg-sand-100 p-8 text-center text-ink md:flex-row md:text-start">
         <Stamp subLabel="ADMITTED" tilt="-6deg" size={200} className="shrink-0" />
         <div>
           <p className="font-mono text-[0.65rem] uppercase tracking-[0.18em]">Admission ticket</p>

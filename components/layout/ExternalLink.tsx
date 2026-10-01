@@ -22,7 +22,7 @@ export function ExternalLink({ href, children, className, ...rest }: ExternalLin
         viewBox="0 0 16 16"
         width="0.75em"
         height="0.75em"
-        className="ml-1 inline-block align-baseline"
+        className="ms-1 inline-block align-baseline"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
