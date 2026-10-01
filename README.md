@@ -10,10 +10,15 @@ Repo lives in the Returning-Sands GitHub organisation; Vercel deploys `main` aut
 ## Checks on pull requests
 
 `.github/workflows/a11y.yml` ("Accessibility and size gate", job `gate`) runs on every
-pull request and on pushes to `main`: `npm run build` (tsc, eslint, vitest, `next build`),
+pull request and on pushes to `main`: `npm run check` (tsc, eslint, vitest, `next build`),
 `npm run test:e2e` (Playwright axe scan of every route plus the behavioural suites) and
 `npm run size` (Home route first-party JS, 200 KB gzip). On failure the Playwright report
 is uploaded as a workflow artifact.
+
+`npm run check` is the full gate, used locally and in the Action. `npm run build` is what
+Vercel runs: `next build` only, because Vercel's build image cannot run Vitest. The content
+validator still runs inside `next build`, so bad content still fails a deploy; the unit
+tests run in the GitHub Action.
 
 Vercel deploys a PR preview regardless of the check result; only production is gated.
 For a red check to block the production deploy, enable branch protection on `main` with

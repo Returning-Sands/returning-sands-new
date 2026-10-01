@@ -25,8 +25,9 @@ jobs:
 
       - run: npx playwright install --with-deps chromium
 
-      # tsc, eslint, vitest, next build (Req 21.3). Fails on any dynamic route.
-      - run: npm run build
+      # Full gate: tsc, eslint, vitest, next build (Req 21.3). Fails on any dynamic route.
+      # Vercel runs only `npm run build` (next build); the unit tests run here.
+      - run: npm run check
         env:
           CI: true
 

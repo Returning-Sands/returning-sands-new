@@ -147,3 +147,4 @@ Summary: 8 confirmed, 2 corrected (items 6 and 8), plus a few sharp edges to car
 5. **All image tasks:** use `preload` not `priority`; never pass `quality` unless `images.qualities` is extended; no `?query` on local image paths; always set `sizes`.
 6. **Share-card tasks:** `readFile` at module scope, `fonts[].data: ArrayBuffer`, `.woff`/`.ttf` only, keep per-route bundle < 500 KB.
 7. **Every deploy gate:** route table must contain only `○` / `●` rows, never `ƒ`.
+8. **Vercel vs local/CI:** Vercel's build image cannot run Vitest (`React.act` / `node:` resolution errors); keep `build` = `next build` and run the test gate via `npm run check` locally and in the Action.

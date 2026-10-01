@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "tsx scripts/extract-tokens.ts",
-    "build": "tsc --noEmit && eslint . && vitest run --passWithNoTests && next build",
+    "build": "next build",
     "postbuild": "tsx scripts/placeholder-summary.ts",
+    "check": "tsc --noEmit && eslint . && vitest run --passWithNoTests && next build",
     "start": "next start",
     "test": "vitest run",
     "test:e2e": "playwright test",
