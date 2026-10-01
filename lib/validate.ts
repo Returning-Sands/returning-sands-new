@@ -112,7 +112,11 @@ function publicFileExists(src: string): boolean {
 }
 
 function repoPathExists(relPath: string): boolean {
-  return existsSync(path.join(process.cwd(), ...relPath.split("/").filter(Boolean)));
+  // Build-time existence check only; the ignore comment stops Turbopack from
+  // tracing the whole project into the server bundle because of this path.
+  return existsSync(
+    path.join(/*turbopackIgnore: true*/ process.cwd(), ...relPath.split("/").filter(Boolean)),
+  );
 }
 
 const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
