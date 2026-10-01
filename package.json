@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "tsx scripts/extract-tokens.ts",
     "build": "tsc --noEmit && eslint . && vitest run --passWithNoTests && next build",
     "postbuild": "tsx scripts/placeholder-summary.ts",
     "start": "next start",

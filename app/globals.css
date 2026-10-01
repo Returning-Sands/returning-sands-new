@@ -1,1 +1,356 @@
 @import "tailwindcss";
+
+/* ─── Design_Tokens ─────────────────────────────────────────────────
+   This file is the ONLY place a colour value may be written (Req 13.1).
+   `scripts/extract-tokens.ts` reads the `:root` block below to generate
+   `lib/tokens.ts` for the Share_Card renderers. Keep every colour here. */
+
+:root {
+  /* Old_Site palette (unchanged) */
+  --sand-50: #faf5ec;
+  --sand-100: #f1e8d4;
+  --sand-200: #e8dcc4;
+  --sand-300: #d4b886;
+  --sand-400: #c19a5b;
+  --ochre-500: #b8651f;
+  --ochre-600: #8b4513;
+  --nile-700: #1a3a52;
+  --nile-800: #122a3d;
+  --nile-900: #0a1825;
+  --ink: #18130c;
+  --stamp-200: #e2c9d3;
+  --stamp-400: #b487a0;
+  --stamp-500: #96617c;
+  --stamp-600: #7c4c66;
+  --stamp-700: #5f3a4f;
+
+  /* Six Instagram-template accents. Provisional hex values; the designer
+     confirms them (see DESIGN_ASSETS.md). */
+  --accent-ochre-yellow: #d9a441;
+  --accent-deep-blue: #1b3a5c;
+  --accent-brick-red: #a3391f;
+  --accent-pale-pink: #efd3d0;
+  --accent-dusty-blue: #7f9bb3;
+  --accent-terracotta: #c2643d;
+}
+
+@theme inline {
+  --color-sand-50: var(--sand-50);
+  --color-sand-100: var(--sand-100);
+  --color-sand-200: var(--sand-200);
+  --color-sand-300: var(--sand-300);
+  --color-sand-400: var(--sand-400);
+  --color-ochre-500: var(--ochre-500);
+  --color-ochre-600: var(--ochre-600);
+  --color-nile-700: var(--nile-700);
+  --color-nile-800: var(--nile-800);
+  --color-nile-900: var(--nile-900);
+  --color-ink: var(--ink);
+  --color-stamp-200: var(--stamp-200);
+  --color-stamp-400: var(--stamp-400);
+  --color-stamp-500: var(--stamp-500);
+  --color-stamp-600: var(--stamp-600);
+  --color-stamp-700: var(--stamp-700);
+
+  --color-accent-ochre-yellow: var(--accent-ochre-yellow);
+  --color-accent-deep-blue: var(--accent-deep-blue);
+  --color-accent-brick-red: var(--accent-brick-red);
+  --color-accent-pale-pink: var(--accent-pale-pink);
+  --color-accent-dusty-blue: var(--accent-dusty-blue);
+  --color-accent-terracotta: var(--accent-terracotta);
+
+  /* Two typefaces only (Req 13.6). next/font (lib/fonts.ts, the single
+     Display_Font declaration) sets `--font-display` and `--font-mono` on
+     <html>. Tailwind's default `--font-mono` is removed so it cannot
+     shadow the next/font value on :root; the `font-display` and
+     `font-mono` utilities are declared below with @utility instead of
+     here, because a `--font-display: var(--font-display)` theme entry
+     would be emitted on :root as a self-referencing (cyclic) property. */
+  --font-mono: initial;
+
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+}
+
+@utility font-display {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+}
+@utility font-mono {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ─── Base ──────────────────────────────────────────────────────── */
+
+html,
+body {
+  background: var(--sand-50);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-display), Georgia, serif;
+  font-feature-settings: "lnum", "liga";
+}
+
+/* Arabic site title: Bitter/AVRO carry no Arabic glyphs, so fall through
+   to a system Naskh face rather than rendering boxes (Req 3.2). */
+[lang="ar"] {
+  font-family: var(--font-display), "Noto Naskh Arabic", serif;
+}
+
+::selection {
+  background: var(--ochre-500);
+  color: var(--sand-50);
+}
+
+.kicker {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.dune {
+  background:
+    radial-gradient(1200px 600px at 80% -20%, rgba(184, 101, 31, 0.18), transparent 60%),
+    radial-gradient(900px 500px at -10% 30%, rgba(26, 58, 82, 0.12), transparent 60%),
+    linear-gradient(180deg, var(--sand-50), var(--sand-100));
+}
+
+.divider-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(24, 19, 12, 0.25), transparent);
+}
+
+.hover-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.4s cubic-bezier(0.2, 0.65, 0.3, 1);
+}
+.hover-underline:hover {
+  background-size: 100% 1px;
+}
+
+/* ─── Paper grain (CSS only, no image request — Req 13.10) ──────── */
+
+.grain {
+  position: relative;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* ─── Reveal on enter view ──────────────────────────────────────── */
+
+/* Fade + rise, driven by the .is-visible class that components/motion/
+   Reveal.tsx toggles from an IntersectionObserver. */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.9s cubic-bezier(0.2, 0.6, 0.2, 1),
+              transform 0.9s cubic-bezier(0.2, 0.6, 0.2, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-lg {
+  opacity: 0;
+  transform: translateY(64px);
+  transition: opacity 1.1s cubic-bezier(0.2, 0.6, 0.2, 1),
+              transform 1.1s cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.reveal-lg.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children — apply along with .reveal-stagger and each child
+   gets an incremental transition-delay via --i. */
+.reveal-stagger > *.reveal,
+.reveal-stagger > *.reveal-lg {
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+
+/* ─── Stamp motif ───────────────────────────────────────────────── */
+
+/* Perforated edge — die-cut circles bitten into the top and bottom
+   edges, like a stamp torn from a sheet. Implemented as two thin strips
+   painted in --perf-bg (the color behind the card) with a single-layer
+   mask punching the circles — no mask-composite needed, so it renders
+   consistently everywhere. Set --perf-bg to match the surrounding
+   background wherever a card sits on something other than sand-50. */
+.perf {
+  --perf-bg: var(--sand-50);
+  position: relative;
+}
+.perf::before,
+.perf::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 13px;
+  background: var(--perf-bg);
+  -webkit-mask-image: radial-gradient(circle 6.5px at 11px 6.5px, black 99%, transparent 100%);
+  mask-image: radial-gradient(circle 6.5px at 11px 6.5px, black 99%, transparent 100%);
+  -webkit-mask-size: 22px 13px;
+  mask-size: 22px 13px;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  pointer-events: none;
+}
+.perf::before { top: -1px; }
+.perf::after { bottom: -1px; }
+
+/* Perforation seam — a torn dotted line sitting between two sections. */
+.perf-seam {
+  position: relative;
+  height: 1px;
+  background-image: radial-gradient(circle at 1px 1px, rgba(24, 19, 12, 0.22) 1.4px, transparent 1.6px);
+  background-size: 14px 1px;
+  background-repeat: repeat-x;
+}
+.perf-seam.on-dark {
+  background-image: radial-gradient(circle at 1px 1px, rgba(250, 245, 236, 0.28) 1.4px, transparent 1.6px);
+}
+
+/* Postage denomination chip — small bordered tag for kickers/numerals */
+.stamp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  border: 1px solid currentColor;
+  padding: 0.3em 0.75em;
+  position: relative;
+}
+.stamp-chip::before,
+.stamp-chip::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+  transform: translateY(-50%);
+}
+.stamp-chip::before { left: -2px; }
+.stamp-chip::after { right: -2px; }
+
+/* Slight physical tilt, as if hand-affixed */
+.stamp-tilt {
+  transform: rotate(-4deg);
+}
+.stamp-tilt-r {
+  transform: rotate(3deg);
+}
+
+/* Idle sway — a stamp resting on paper, gently unsettled. Reads --tilt
+   (set inline per instance) as its resting angle. */
+.stamp-sway {
+  animation: stamp-sway-kf 7s ease-in-out infinite;
+  transform-origin: 50% 50%;
+}
+@keyframes stamp-sway-kf {
+  0%, 100% { transform: rotate(calc(var(--tilt, 0deg) - 1.6deg)); }
+  50%      { transform: rotate(calc(var(--tilt, 0deg) + 1.6deg)); }
+}
+
+/* Hover lift — composes with the parent's rotation instead of fighting it */
+.stamp-hover {
+  transition: transform 0.35s cubic-bezier(0.2, 0.6, 0.2, 1), box-shadow 0.35s ease;
+}
+.stamp-hover:hover {
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: 0 20px 45px -10px rgba(24, 19, 12, 0.55);
+}
+
+/* Postmark stamping-in — the cancellation marks draw themselves as the
+   mark scrolls into view. Falls back to fully drawn when unsupported. */
+.postmark-draw circle,
+.postmark-draw line {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 0;
+}
+@supports (animation-timeline: view()) {
+  .postmark-draw circle,
+  .postmark-draw line {
+    stroke-dashoffset: 300;
+    animation: postmark-stamp-kf linear both;
+    animation-timeline: view();
+    animation-range: cover 10% cover 55%;
+  }
+}
+@keyframes postmark-stamp-kf {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ─── Placeholders ──────────────────────────────────────────────── */
+
+/* Visibly marked "not yet available" copy (components/content/Pending.tsx) */
+.pending {
+  border: 1px dashed var(--ochre-600);
+  padding: 0.75rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* ─── No-JS fallbacks (Req 19.8) ────────────────────────────────── */
+
+/* <html class="no-js"> is removed by an inline script in layout.tsx. With
+   scripts disabled the inline nav list shows and revealed content is
+   visible from first paint. */
+.no-js .nav-inline {
+  display: flex;
+}
+.no-js .reveal,
+.no-js .reveal-lg {
+  opacity: 1;
+  transform: none;
+}
+
+/* ─── Reduced motion (Req 13.11) ────────────────────────────────── */
+
+/* Every decorative element renders in its final state on first paint and
+   has no transition or animation duration greater than 0 ms. */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-lg,
+  .hover-underline,
+  .stamp-hover,
+  .stamp-sway,
+  .postmark-draw circle,
+  .postmark-draw line {
+    transition: none !important;
+    transition-duration: 0s !important;
+    animation: none !important;
+    animation-duration: 0s !important;
+  }
+  .reveal,
+  .reveal-lg {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .stamp-sway {
+    transform: rotate(var(--tilt, 0deg)) !important;
+  }
+  .postmark-draw circle,
+  .postmark-draw line {
+    stroke-dashoffset: 0 !important;
+  }
+}
