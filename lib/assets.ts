@@ -44,5 +44,9 @@ export function resolveAsset(
  * time, else `null` so the caller renders its Stand_In.
  */
 export function fileAsset(publicPath: string): string | null {
-  return existsSync(resolve(process.cwd(), publicPath)) ? publicUrl(publicPath) : null;
+  // Build-time existence check only; the ignore comment stops Turbopack from
+  // tracing the whole project into the server bundle because of this path.
+  return existsSync(resolve(/*turbopackIgnore: true*/ process.cwd(), publicPath))
+    ? publicUrl(publicPath)
+    : null;
 }
