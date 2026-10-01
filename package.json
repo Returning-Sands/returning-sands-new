@@ -10,6 +10,7 @@
     "start": "next start",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "size": "size-limit",
     "lint": "eslint ."
   },
   "dependencies": {
