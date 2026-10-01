@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { FILLED_BUTTON, OUTLINED_BUTTON } from "@/components/donate/UkPanel";
 import { ExternalLink } from "@/components/layout/ExternalLink";
+import { MailingListTicket } from "@/components/support/MailingListTicket";
 import { PartnerTile } from "@/components/support/PartnerTile";
 import { partners } from "@/content/partners";
 import { site } from "@/content/site";
@@ -12,10 +13,12 @@ import { pageMetadata } from "@/lib/metadata";
 //
 // Order is load-bearing (11.1): the <h1> is the only thing above the two CTAs,
 // "Get in Touch" (mailto: general) then "Support Us" (/donate), and nothing
-// interactive precedes them. Then three sections, each labelled by its <h2>:
+// interactive precedes them. Then four sections, each labelled by its <h2>:
 //   - Contact: one mailto: per entry in `site.support.contacts` order — general
 //     first, then the named contacts — label = name + role; an unconfirmed
 //     address routes to the general inbox via `mailtoFor` (11.2, 11.10)
+//   - Stay in touch: one MailingListTicket (the Admission_Ticket with a
+//     "Join the mailing list" heading, same Email_Provider as /museum)
 //   - Follow: Instagram and LinkedIn ExternalLinks, each with a decorative
 //     icon AND a visible platform name (11.4)
 //   - Partners & Supporters: <h2> from content + 2 / 4 column grid of equal
@@ -70,6 +73,15 @@ export default function SupportPage() {
         </ul>
       </section>
 
+      {/* Mailing list: the Admission_Ticket reused with a different heading,
+          posting to the same Email_Provider as /museum (Req 9.3). */}
+      <section aria-labelledby="stay-in-touch-heading" className="mt-16">
+        <h2 id="stay-in-touch-heading" className={H2}>
+          Stay in touch
+        </h2>
+        <MailingListTicket className="mt-6 max-w-3xl" />
+      </section>
+
       {/* Req 11.4 */}
       <section aria-labelledby="follow-heading" className="mt-16">
         <h2 id="follow-heading" className={H2}>
@@ -122,7 +134,7 @@ const ICON = {
   strokeWidth: "1.75",
   strokeLinecap: "round",
   strokeLinejoin: "round",
-  className: "mr-2 inline-block align-text-bottom",
+  className: "me-2 inline-block align-text-bottom",
 } as const;
 
 function InstagramIcon() {

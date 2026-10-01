@@ -27,13 +27,13 @@ When the build succeeds it finishes with a short list of what is still missing. 
 
 ## What each file contains
 
-- `site.ts` — Site-wide words. The site name and Arabic name, the kicker "A FILM & IMPACT CAMPAIGN", the one-line description on the Home page, the navigation links, Instagram and LinkedIn URLs, the About page (About us, Mission, the five Goals), the What's at Stake page (quote, body text, the 60% statistic, archival images), the Virtual Museum teaser and donate line on the Campaign page, the Support page contacts, the browser tab title and search description for every page, the `designAssets` on/off switches for the designer's artwork, and the site-level Placeholders (campaign overview, email provider, funder acknowledgement, company registration, contact emails).
+- `site.ts` — Site-wide words. The site name and Arabic name, the kicker "A FILM & IMPACT CAMPAIGN", the one-line description on the Home page, the navigation links, Instagram and LinkedIn URLs, the About page (About us, Mission, the five Goals), the What's at Stake page (quote, body text, the 60% statistic, archival images), the Virtual Museum teaser and donate line on the Campaign page, the Support page contacts (including the Donations team), the Companies House number shown in the footer (`companyNumber`), the browser tab title and search description for every page, the `designAssets` on/off switches for the designer's artwork, and the site-level Placeholders (campaign overview, email provider, funder acknowledgement, company registration, contact emails).
 - `events.ts` — The three cities (name, one-line framing sentence, airport code) and the seven impact events for Cairo, London and New York: title, stamp label, venue, date, blurb, sponsor line, images, ticket link. Also the two date Placeholders (Exclusive Showcase date, Culture House day).
 - `team.ts` — The three team groups and the ten team members: name, role, group, where they are based, bio, photo and display order.
 - `partners.ts` — The "Partners & Supporters" heading and the thirteen partner names shown on the Support page, with each partner's logo, website link and logo-permission status.
-- `donate.ts` — The Donate page. US panel (SIMA tagline, PayPal and SIMA links), UK panel (button labels, the text shown while Stripe and bank details are missing, the payment-reference instruction), the two legal statements, and the Placeholders for the Stripe Payment Link and bank details.
+- `donate.ts` — The Donate page. US panel (SIMA tagline, PayPal and SIMA links), UK panel (the sentence above the card button, button labels, the text shown while Stripe and bank details are missing, the payment-reference instruction), the two legal statements, the "Questions about giving?" line (the address comes from `site.ts` contact emails), and the Placeholders for the Stripe Payment Link and bank details (account name, sort code, account number, plus optional IBAN and BIC).
 - `film.ts` — The Documentary page. Section headings, director Aicha Cherif (name, credential, director's note), protagonist Ali Nour (bio and photo), the two backers (Sundance x Adobe Ignite Fellowship, SIMA Studios), the "Trailer coming soon" text, and the Placeholders for the logline, the about-the-film text and the trailer URL. The Home page's trailer button reads the trailer URL from here too.
-- `museum.ts` — The Virtual Museum page. Intro paragraphs, "What it is", the collection areas, the roadmap stages (exactly one marked `current: true`), the Admission Ticket label, button and privacy note, the thank-you page text, and the Placeholder for the paragraph on the work of Amer.
+- `museum.ts` — The Virtual Museum page. Intro paragraphs, "What it is", the collection areas, the roadmap stages (exactly one marked `current: true`), the Admission Ticket label, button, consent-checkbox sentence and privacy note (the same ticket is reused as the mailing-list signup on the Support page), the thank-you page text, and the Placeholder for the paragraph on the work of Amer.
 
 ## How to fill a Placeholder
 
@@ -46,23 +46,24 @@ An empty Placeholder looks like one of these:
 
 Both mean "not yet available". Spaces only (`"   "`) also count as empty. While a Placeholder is empty the site shows the agreed fallback instead: a disabled "Trailer coming soon" button, a dashed "[Copy to follow]" box, the "coming shortly" text on the UK donate panel, and so on. It never prints the word "null".
 
+One value that is not a Placeholder but behaves like one: `companyNumber` in `site.ts`. The footer shows "Returning Sands CIC · Company no. 17311689 · Registered office to follow" while it is filled and the grouped `companyRegistration` is still `null`. Once the registered office is known, fill all three fields of `companyRegistration` and the footer shows the full line instead.
+
 After every successful build the site prints what is still outstanding. Today the list reads:
 
 ```
-Outstanding Placeholders (12):
+Outstanding Placeholders (9):
   content/site.ts   pending.campaignOverview
-  content/site.ts   pending.emailProvider
   content/site.ts   pending.funderAcknowledgement
   content/site.ts   pending.companyRegistration
   content/events.ts   pending.exclusiveShowcaseDate
   content/events.ts   pending.cultureHouseDay
-  content/donate.ts   pending.stripePaymentLink
-  content/donate.ts   pending.bankDetails
   content/film.ts   pending.logline
   content/film.ts   pending.aboutFilm
   content/film.ts   pending.trailerUrl
   content/museum.ts   pending.workOfAmer
 ```
+
+(The Stripe link, bank details and email provider were filled on 2026-10-01 from the old site, so they no longer appear.)
 
 You can print it yourself at any time without a full build: `npx tsx scripts/placeholder-summary.ts`.
 
@@ -72,38 +73,63 @@ When everything is filled it prints a single line: `No Placeholders are outstand
 
 Some Placeholders are a group of fields: bank details (account name, sort code, account number) and company registration (name, number, address). The site shows a group only when every field in it is filled. If you fill two of three, the whole group is treated as empty, the fallback stays on screen, and the summary says `partially filled — treated as empty`. Fill all of them in one go.
 
-### Example 1: the Stripe link
+Two bank fields are optional extras and do not count: `iban` and `bic`. Leave them out, or leave them empty, and the three core fields still decide whether the panel shows.
 
-In `donate.ts`, find:
+### Example 1: the Stripe link (filled)
+
+In `donate.ts`, the `pending` block holds the Stripe Payment Link:
 
 ```ts
   pending: {
-    stripePaymentLink: "",
-    bankDetails: null,
+    stripePaymentLink: "https://donate.stripe.com/XXXXXXXXXXXX",
+    bankDetails: { ... },
   },
 ```
 
-Paste the Stripe Payment Link between the quotes:
+To take the card button off the page, set it back to `""`. To change it, paste the new Payment Link between the quotes. The "Donate by card" button (and the sentence above it, `uk.intro`) appears on the Donate page whenever the link is filled.
 
-```ts
-    stripePaymentLink: "https://buy.stripe.com/XXXXXXXXXXXX",
-```
+### Example 2: bank details (filled)
 
-The "Donate in GBP" button appears on the Donate page at the next build.
-
-### Example 2: bank details
-
-In the same block, replace `null` with all three fields:
+In the same block, `bankDetails` has the three core fields plus the two optional ones:
 
 ```ts
     bankDetails: {
-      accountName: "Returning Sands CIC",
-      sortCode: "12-34-56",
-      accountNumber: "12345678",
+      accountName: "Returning Sands Community Interest Company",
+      sortCode: "08-92-99",
+      accountNumber: "67540396",
+      iban: "GB83 CPBK 0892 9967 5403 96",
+      bic: "CPBKGB22",
     },
 ```
 
-The UK panel then shows the details with copy buttons and the line "Please use your name as the payment reference."
+The UK panel shows one row per filled field, each with a Copy button, then the line "Please use your name as the payment reference." Set the whole value to `null` to take the details off the page.
+
+### Example 2b: the email provider (filled)
+
+In `site.ts`, `pending.emailProvider` describes where the Admission Ticket on the Virtual Museum page (and the "Join the mailing list" ticket on the Support page) sends sign-ups. Today it is Web3Forms, which emails each sign-up to info@returningsands.org; that email (address, consent sentence, time) is the consent record.
+
+```ts
+    emailProvider: {
+      provider: "Web3Forms (relayed to info@returningsands.org)",
+      actionUrl: "https://api.web3forms.com/submit",
+      hiddenFields: {
+        access_key: "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+        subject: "Virtual Museum ticket — returningsands.org",
+        from_name: "Returning Sands website",
+        redirect: "https://returningsands.org/museum/thanks",
+        botcheck: "",
+      },
+      emailFieldName: "email",
+    },
+```
+
+- `provider` — The name shown in the privacy note under the ticket and on the Privacy page ("Handled by …", "Sign-ups are relayed by …").
+- `actionUrl` — The address the form posts to. Set it to `""` to switch the ticket off ("Ticket desk opening soon") without deleting the rest.
+- `hiddenFields` — Extra values sent with every sign-up. For Web3Forms: `access_key` (the public form key), `subject` and `from_name` (how the relayed email is labelled), `botcheck` (a spam trap; leave it empty) and `redirect`.
+- `redirect` — The full web address the visitor is sent to after a successful sign-up. It must be the production address `https://returningsands.org/museum/thanks`, not a preview URL. Until the domain moves to the new site (see `CUTOVER.md`), a sign-up made on a preview deployment therefore lands on the old site's `/museum/thanks`, which does not exist there. That is accepted for now; it fixes itself at cutover.
+- `emailFieldName` — The name the provider expects for the email field (`email` for Web3Forms).
+
+Switching to a newsletter service later means replacing this one object and nothing else.
 
 ### Example 3: the trailer URL
 

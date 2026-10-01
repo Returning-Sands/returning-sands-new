@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import { ExternalLink } from "@/components/layout/ExternalLink";
-import { Footer } from "@/components/layout/Footer";
+import { Footer, legalLine } from "@/components/layout/Footer";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { SmartLink } from "@/components/layout/SmartLink";
@@ -35,11 +35,22 @@ describe("SkipLink (Req 15.4)", () => {
 });
 
 describe("Footer legal block (Req 17.1, 17.2, 17.3, 17.8, 1.8)", () => {
-  it("renders the fallback line when the registration Placeholder is pending (default)", () => {
+  it("renders the company number with 'Registered office to follow' when only site.companyNumber is known (default)", () => {
     const { container } = render(<Footer />);
+    expect(site.pending.companyRegistration).toBeNull();
+    expect(site.companyNumber).toBe("17311689");
+    expect(
+      screen.getByText("Returning Sands CIC · Company no. 17311689 · Registered office to follow"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Returning Sands CIC · Company details to follow")).toBeNull();
+    expect(container.textContent).toContain(`© ${new Date().getUTCFullYear()} Returning Sands CIC`);
+  });
+
+  it("renders the exact old fallback line when both the registration and the company number are absent", () => {
+    const { container } = render(<Footer companyNumber="" />);
     expect(screen.getByText("Returning Sands CIC · Company details to follow")).toBeInTheDocument();
     expect(container.textContent).not.toContain("Company no.");
-    expect(container.textContent).toContain(`© ${new Date().getUTCFullYear()} Returning Sands CIC`);
+    expect(legalLine(null, "   ")).toBe("Returning Sands CIC · Company details to follow");
   });
 
   it("renders all three fields when a full registration is supplied", () => {
@@ -60,10 +71,14 @@ describe("Footer legal block (Req 17.1, 17.2, 17.3, 17.8, 1.8)", () => {
 
   it("treats a partially filled registration as pending and leaks no field", () => {
     const { container } = render(
-      <Footer companyRegistration={{ name: "Returning Sands CIC", number: "", address: "" }} />,
+      <Footer companyRegistration={{ name: "Returning Sands CIC", number: "", address: "" }} companyNumber="" />,
     );
     expect(screen.getByText("Returning Sands CIC · Company details to follow")).toBeInTheDocument();
     expect(container.textContent).not.toContain("Company no.");
+    // With the number known, the partial group still does not leak its own fields.
+    expect(legalLine({ name: "Other Name Ltd", number: "99", address: "" }, "17311689")).toBe(
+      "Returning Sands CIC · Company no. 17311689 · Registered office to follow",
+    );
   });
 
   it("has a Footer nav linking every Page, /museum and Privacy, plus social icon links", () => {

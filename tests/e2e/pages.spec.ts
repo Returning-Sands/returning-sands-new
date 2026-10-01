@@ -125,9 +125,8 @@ test.describe("Donate panels", () => {
 });
 
 test.describe("Copy buttons", () => {
-  // The <dl> with the Copy buttons renders only when all three bank fields in
-  // content/donate.ts are present; they are pending, so these are skipped.
-  test.skip(true, "bank details pending");
+  // The <dl> with the Copy buttons renders only when all three core bank
+  // fields in content/donate.ts are present (filled 2026-10-01).
 
   test("Copy → Copied with clipboard permission granted", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);

@@ -2,11 +2,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 
 import SupportPage, { metadata } from "@/app/support/page";
+import { MAILING_LIST_HEADING, MAILING_LIST_TICKET_ID } from "@/components/support/MailingListTicket";
 import { PARTNER_LOGO_SIZES, PartnerTile, showsLogo } from "@/components/support/PartnerTile";
+import { museum } from "@/content/museum";
 import { partners } from "@/content/partners";
 import { site } from "@/content/site";
 import { generalMailto, mailtoFor } from "@/lib/contacts";
-import type { Contact, ContactKey, Partner } from "@/lib/types";
+import type { Contact, ContactKey, EmailProviderConfig, Partner } from "@/lib/types";
 
 // Vitest runs without `globals: true`, so RTL cannot register its own
 // afterEach cleanup; unmount explicitly or renders accumulate across tests.
@@ -14,6 +16,7 @@ afterEach(cleanup);
 
 const EMAILS: Record<ContactKey, string> = {
   general: "info@example.org",
+  donations: "donations@example.org",
   yusef: "yusef@example.org",
   paris: "paris@example.org",
   camilla: "camilla@example.org",
@@ -36,6 +39,7 @@ describe("mailtoFor / generalMailto", () => {
   it("routes a confirmed contact to its own address (11.3)", () => {
     expect(mailtoFor(contact("yusef", true), EMAILS)).toBe("mailto:yusef@example.org");
     expect(mailtoFor(contact("cillian", true), EMAILS)).toBe("mailto:cillian@example.org");
+    expect(mailtoFor(contact("donations", true), EMAILS)).toBe("mailto:donations@example.org");
   });
 
   it("routes an unconfirmed contact to the general address (11.10)", () => {
@@ -152,8 +156,10 @@ describe("Support page (Req 11)", () => {
     render(<SupportPage />);
     const emails = site.pending.contactEmails;
     const contacts = site.support.contacts;
-    expect(contacts).toHaveLength(5);
-    expect(contacts.map((c) => c.key)).toEqual(["general", "yusef", "paris", "camilla", "cillian"]);
+    expect(contacts).toHaveLength(6);
+    expect(contacts.map((c) => c.key)).toEqual(["general", "donations", "yusef", "paris", "camilla", "cillian"]);
+    // The two inboxes are confirmed; the four named people are not yet.
+    expect(contacts.map((c) => c.confirmed)).toEqual([true, true, false, false, false, false]);
 
     const section = screen.getByRole("heading", { level: 2, name: "Contact" }).closest("section")!;
     const items = within(section).getAllByRole("listitem");
@@ -168,11 +174,50 @@ describe("Support page (Req 11)", () => {
       expect(anchors[0].textContent).toContain(c.role);
     });
 
-    // In the current content every named contact is unconfirmed, so all five
-    // mailto: targets (general included) point at the general inbox.
+    // Every named person is unconfirmed, so their mailto: targets (and the
+    // general one) point at the general inbox; only Donations has its own.
     const hrefs = Array.from(section.querySelectorAll("a")).map((a) => a.getAttribute("href"));
-    expect(hrefs).toHaveLength(5);
-    expect(new Set(hrefs)).toEqual(new Set(["mailto:info@returningsands.org"]));
+    expect(hrefs).toEqual([
+      "mailto:info@returningsands.org",
+      "mailto:donations@returningsands.org",
+      "mailto:info@returningsands.org",
+      "mailto:info@returningsands.org",
+      "mailto:info@returningsands.org",
+      "mailto:info@returningsands.org",
+    ]);
+    expect(items[1]).toHaveTextContent("Donations team");
+    expect(items[1]).toHaveTextContent("Giving and receipts");
+  });
+
+  it("renders a 'Stay in touch' mailing-list ticket between Contact and Follow, posting to the same provider", () => {
+    const { container } = render(<SupportPage />);
+    const h2s = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+    expect(h2s).toEqual(["Contact", "Stay in touch", "Follow", partners.heading]);
+
+    const section = screen.getByRole("heading", { level: 2, name: "Stay in touch" }).closest("section")!;
+    expect(within(section).getByText(MAILING_LIST_HEADING)).toBeInTheDocument();
+    expect(screen.queryByText("Admission ticket")).toBeNull();
+
+    const form = section.querySelector("form")!;
+    expect(form).not.toBeNull();
+    expect(form).toHaveAttribute("method", "post");
+    expect(form).toHaveAttribute("action", (site.pending.emailProvider as EmailProviderConfig).actionUrl);
+    expect(form).toHaveAttribute("action", "https://api.web3forms.com/submit");
+
+    const email = within(section).getByLabelText(museum.ticket.label);
+    expect(email).toHaveAttribute("id", MAILING_LIST_TICKET_ID);
+    expect(email).toHaveAttribute("id", "ticket-support");
+    expect(email).toBeEnabled();
+    expect(email).toBeRequired();
+
+    const consent = within(section).getByLabelText(museum.ticket.consentText);
+    expect(consent).toHaveAttribute("type", "checkbox");
+    expect(consent).toHaveAttribute("name", "consent");
+    expect(consent).toBeRequired();
+
+    expect(within(section).getByRole("button", { name: "Reserve my ticket" })).toHaveAttribute("type", "submit");
+    expect(container.querySelectorAll("form")).toHaveLength(1);
+    expect(container.querySelectorAll("script")).toHaveLength(0);
   });
 
   it("shows Instagram and LinkedIn as new-tab links with an icon and visible text (11.4)", () => {
@@ -234,10 +279,11 @@ describe("Support page (Req 11)", () => {
       render(<Page />);
       expect(screen.queryByRole("heading", { name: "Partners & Supporters" })).toBeNull();
       expect(screen.queryByText("Partners & Supporters")).toBeNull();
-      // The other two sections are unaffected.
+      // The other three sections are unaffected.
       expect(screen.getByRole("heading", { level: 2, name: "Contact" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 2, name: "Stay in touch" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { level: 2, name: "Follow" })).toBeInTheDocument();
-      expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(2);
+      expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(3);
     } finally {
       vi.doUnmock("@/content/partners");
       vi.resetModules();

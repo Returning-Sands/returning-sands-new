@@ -4,14 +4,17 @@ import { CopyButton } from "@/components/content/CopyButton";
 import { ExternalLink } from "@/components/layout/ExternalLink";
 import { donate } from "@/content/donate";
 import { ukPanelState } from "@/lib/donate";
+import { present } from "@/lib/pending";
 
 // "United Kingdom & elsewhere" panel body (Req 12.3, 12.4, 12.5, 12.12, 12.13).
 // Server component; the only client code inside is each `CopyButton`.
 //
 // Three independent branches decided by `ukPanelState` (design Property 8):
-//   - Stripe link present      -> "Donate in GBP" ExternalLink
-//   - all three bank fields    -> <dl> name / sort code / account number, each
-//                                 with a CopyButton, then the reference line
+//   - Stripe link present      -> `uk.intro` sentence + "Donate by card" ExternalLink
+//   - all three bank fields    -> <dl> name / sort code / account number (plus
+//                                 IBAN and BIC rows when those optional fields
+//                                 are present), each with a CopyButton, then
+//                                 the reference line
 //   - neither                  -> fallback text + single button to /support
 // The heading itself (`uk.title`) is rendered by the page so both panels share
 // one <section>/<h2> structure.
@@ -28,22 +31,25 @@ export function UkPanel() {
   // `showBank` guarantees the group is fully populated (lib/donate.ts), so the
   // non-null assertion below is safe; the fields are read once for the rows.
   const bank = showBank ? pending.bankDetails! : null;
-  const rows = bank
-    ? ([
-        ["Account name", bank.accountName],
-        ["Sort code", bank.sortCode],
-        ["Account number", bank.accountNumber],
-      ] as const)
-    : [];
+  const rows: [string, string][] = [];
+  if (bank) {
+    rows.push(["Account name", bank.accountName], ["Sort code", bank.sortCode], ["Account number", bank.accountNumber]);
+    // Optional extras for donors outside the UK; absent or blank -> no row.
+    if (bank.iban !== undefined && present(bank.iban)) rows.push(["IBAN", bank.iban]);
+    if (bank.bic !== undefined && present(bank.bic)) rows.push(["BIC", bank.bic]);
+  }
 
   return (
     <div className="flex flex-col gap-6">
       {showStripe ? (
-        <p>
-          <ExternalLink href={pending.stripePaymentLink as string} className={FILLED_BUTTON}>
-            {uk.stripeLabel}
-          </ExternalLink>
-        </p>
+        <>
+          <p className="text-lg leading-relaxed">{uk.intro}</p>
+          <p>
+            <ExternalLink href={pending.stripePaymentLink as string} className={FILLED_BUTTON}>
+              {uk.stripeLabel}
+            </ExternalLink>
+          </p>
+        </>
       ) : null}
 
       {bank ? (

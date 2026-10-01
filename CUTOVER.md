@@ -42,13 +42,13 @@ Candidate commit: `____________`  · build run by: ____ on: ____
 | Content file | Placeholder key | What it disables or marks while empty | Status (filled / accepted empty — reason) |
 |---|---|---|---|
 | `content/site.ts` | `pending.campaignOverview` | `/campaign` shows "[Campaign overview placeholder — copy to follow]" | |
-| `content/site.ts` | `pending.emailProvider` | Admission_Ticket on `/museum` is disabled ("Ticket desk opening soon"); privacy note says provider "to be confirmed" | |
+| `content/site.ts` | `pending.emailProvider` | Admission_Ticket on `/museum` and mailing-list ticket on `/support` are disabled ("Ticket desk opening soon"); privacy note says provider "to be confirmed" | filled 2026-10-01 — Web3Forms, ported from Old_Site (relays to info@returningsands.org; `redirect` uses the production origin, so preview sign-ups land on the old site's `/museum/thanks` until cutover) |
 | `content/site.ts` | `pending.funderAcknowledgement` | Funder block omitted on `/donate` and `/museum` | |
-| `content/site.ts` | `pending.companyRegistration` | Footer shows "Returning Sands CIC · Company details to follow" | |
+| `content/site.ts` | `pending.companyRegistration` | Footer shows "Returning Sands CIC · Company no. 17311689 · Registered office to follow" (from `site.companyNumber`); the plain "Company details to follow" line only if that number were also removed | |
 | `content/events.ts` | `pending.exclusiveShowcaseDate` | NYC Exclusive Showcase shows "Date TBA" and no Event JSON-LD | |
 | `content/events.ts` | `pending.cultureHouseDay` | London Culture House keeps "January 2027, day TBA" | |
-| `content/donate.ts` | `pending.stripePaymentLink` | No "Donate in GBP" button on `/donate` | |
-| `content/donate.ts` | `pending.bankDetails` | No bank details / Copy buttons on `/donate`; fallback text and Support button shown when Stripe is also empty | |
+| `content/donate.ts` | `pending.stripePaymentLink` | No "Donate by card" button or intro sentence on `/donate` | filled 2026-10-01 — Stripe Payment Link, ported from Old_Site |
+| `content/donate.ts` | `pending.bankDetails` | No bank details / Copy buttons on `/donate`; fallback text and Support button shown when Stripe is also empty | filled 2026-10-01 — Co-operative Bank account incl. IBAN and BIC, ported from Old_Site |
 | `content/film.ts` | `pending.logline` | `/film` shows "[Logline to follow]" | |
 | `content/film.ts` | `pending.aboutFilm` | `/film` shows "[About the film to follow]" | |
 | `content/film.ts` | `pending.trailerUrl` | Home shows disabled "Trailer coming soon" button; `/film` shows the coming-soon Boarding_Pass instead of the trailer | |

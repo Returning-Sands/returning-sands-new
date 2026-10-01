@@ -23,9 +23,13 @@ export const metadata = pageMetadata("donate", "/donate");
 const H2 = "font-display text-2xl font-bold tracking-tight md:text-3xl";
 const PANEL = "flex flex-col gap-6 border border-ink p-6 md:p-8";
 
+const MAIL_LINK =
+  "underline decoration-2 underline-offset-4 hover:text-ochre-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nile-800";
+
 export default function DonatePage() {
   const { us, uk, statements } = donate;
   const funder = site.pending.funderAcknowledgement;
+  const donationsEmail = site.pending.contactEmails.donations;
 
   return (
     <article className="mx-auto max-w-5xl px-4 py-16 md:py-24">
@@ -62,10 +66,18 @@ export default function DonatePage() {
         </section>
       </div>
 
-      {/* Req 12.6 then 12.7, in that order, below both panels. */}
+      {/* Req 12.6 then 12.7, in that order, below both panels; then the
+          donations-inbox line (address from the one contactEmails map). */}
       <div className="mt-12 flex max-w-prose flex-col gap-4 text-base leading-relaxed text-nile-800">
         <p>{statements.notForProfit}</p>
         <p>{statements.notACharity}</p>
+        <p>
+          {donate.contactLine}{" "}
+          <a href={`mailto:${donationsEmail}`} className={MAIL_LINK}>
+            {donationsEmail}
+          </a>
+          .
+        </p>
       </div>
 
       {/* Req 12.8, 17.5, 17.6: funder acknowledgement iff present; logo iff present. */}

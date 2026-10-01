@@ -14,20 +14,32 @@ import type { EmailProviderConfig, MuseumContent } from "@/lib/types";
 // it cannot be submitted by mouse, keyboard or Enter (9.4). The privacy note
 // names the provider when known, otherwise the "to be confirmed" wording
 // (17.10, 17.11). Two instances on `/museum` need distinct `id`s.
+//
+// Consent: a REQUIRED checkbox named `consent` carries `copy.consentText` as
+// its value. The provider (Web3Forms) relays every posted field by email, so
+// the email we receive — address, consent sentence, timestamp — is the consent
+// record. The honeypot `botcheck` field travels in `hiddenFields`.
+//
+// `heading` lets the same ticket serve as a compact mailing-list signup
+// elsewhere (Support page) with a different stub label.
 export function AdmissionTicket({
   config,
   id,
   copy,
+  heading = "Admission ticket",
   className = "",
 }: {
   config: Pending<EmailProviderConfig>;
   /** Unique per instance — used for the label/input pairing. */
   id: string;
   copy: MuseumContent["ticket"];
+  /** Small-caps label at the top of the ticket. */
+  heading?: string;
   className?: string;
 }) {
   const asset = resolveAsset("admissionTicket");
   const live = present(config) && !isPending(config.actionUrl) ? config : null;
+  const consentId = `${id}-consent`;
 
   const background =
     asset.kind === "designer" ? (
@@ -58,8 +70,25 @@ export function AdmissionTicket({
     </div>
   );
 
+  const consent = (
+    <div className="relative flex items-start gap-3">
+      <input
+        id={consentId}
+        name="consent"
+        type="checkbox"
+        value={copy.consentText}
+        required
+        disabled={!live}
+        className="mt-1 h-4 w-4 shrink-0 accent-ochre-600 disabled:cursor-not-allowed disabled:opacity-60"
+      />
+      <label htmlFor={consentId} className="text-xs leading-relaxed">
+        {copy.consentText}
+      </label>
+    </div>
+  );
+
   const stub = (
-    <div className="relative flex flex-col justify-center gap-2 border-l-2 border-dashed border-ink pl-5 md:w-56">
+    <div className="relative flex flex-col justify-center gap-2 border-s-2 border-dashed border-ink ps-5 md:w-56">
       <span aria-hidden="true" className="font-mono text-[0.6rem] uppercase tracking-[0.3em] text-nile-700">
         tear here
       </span>
@@ -90,8 +119,9 @@ export function AdmissionTicket({
       {background}
       <div className={layout}>
         <div className="flex flex-1 flex-col gap-3">
-          <span className="font-mono text-[0.65rem] uppercase tracking-[0.18em]">Admission ticket</span>
+          <span className="font-mono text-[0.65rem] uppercase tracking-[0.18em]">{heading}</span>
           {field}
+          {consent}
           {note}
         </div>
         {stub}

@@ -246,6 +246,32 @@ describe("AdmissionTicket", () => {
     expect(screen.getByText(`${museum.ticket.privacyNote} Handled by Buttondown.`)).toBeInTheDocument();
     expect(container.querySelector("script")).toBeNull();
   });
+
+  it("carries a required consent checkbox whose value is the consent sentence", () => {
+    const { container } = render(<AdmissionTicket config={live} id="ticket-footer" copy={museum.ticket} />);
+    const consent = screen.getByLabelText(museum.ticket.consentText);
+    expect(consent).toHaveAttribute("type", "checkbox");
+    expect(consent).toHaveAttribute("name", "consent");
+    expect(consent).toHaveAttribute("value", museum.ticket.consentText);
+    expect(consent).toBeRequired();
+    expect(consent).toBeEnabled();
+    expect(consent).toHaveAttribute("id", "ticket-footer-consent");
+    // Inside the form so it is posted with the email.
+    expect(container.querySelector("form")).toContainElement(consent);
+    // Pending -> still rendered (so the layout does not jump) but disabled.
+    cleanup();
+    render(<AdmissionTicket config={null} id="t" copy={museum.ticket} />);
+    expect(screen.getByLabelText(museum.ticket.consentText)).toBeDisabled();
+  });
+
+  it("defaults the heading to 'Admission ticket' and accepts an override", () => {
+    render(<AdmissionTicket config={live} id="a" copy={museum.ticket} />);
+    expect(screen.getByText("Admission ticket")).toBeInTheDocument();
+    cleanup();
+    render(<AdmissionTicket config={live} id="b" copy={museum.ticket} heading="Join the mailing list" />);
+    expect(screen.getByText("Join the mailing list")).toBeInTheDocument();
+    expect(screen.queryByText("Admission ticket")).toBeNull();
+  });
 });
 
 // ---------------------------------------------------------------------------

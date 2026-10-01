@@ -9,14 +9,15 @@ import type { EmailProviderConfig } from "@/lib/types";
 
 // Virtual Museum page (Req 8, 9, 17.4–17.6) and the /museum/thanks landing
 // (Req 9.6, 16.13). The first block renders against the real Content_Files
-// (Email_Provider, funder acknowledgement and work-of-Amer all pending); the
-// later blocks swap in filled copies via `vi.doMock` + a fresh dynamic import
-// (design Property 6 slices).
+// (Email_Provider = Web3Forms, live; funder acknowledgement and work-of-Amer
+// pending); the later blocks swap in emptied or alternative copies via
+// `vi.doMock` + a fresh dynamic import (design Property 6 slices).
 
 afterEach(cleanup);
 
 const WORK_OF_AMER_NOTE = "Copy on the work of Amer to follow";
 const TICKET_DESK = "Ticket desk opening soon";
+const WEB3FORMS_ACTION = "https://api.web3forms.com/submit";
 
 // Req 8.8: banned delivery-technology terms (word-bounded so "AR" does not
 // match "ARchive", and "3D" does not match "23D").
@@ -37,38 +38,68 @@ describe("/museum with the real (pending) content", () => {
     expect(firstIntro.compareDocumentPosition(firstH2) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("renders two disabled Admission_Tickets with distinct ids and no form (Req 8.2, 8.9, 9.4)", () => {
+  it("renders two live Admission_Ticket forms posting to Web3Forms, with distinct ids (Req 8.2, 8.9, 9.2, 9.3)", () => {
     const { container } = render(<MuseumPage />);
-    expect(screen.getAllByText(TICKET_DESK)).toHaveLength(2);
+    expect(screen.queryByText(TICKET_DESK)).toBeNull();
+
+    const forms = container.querySelectorAll("form");
+    expect(forms).toHaveLength(2);
+    for (const form of Array.from(forms)) {
+      expect(form).toHaveAttribute("method", "post");
+      expect(form).toHaveAttribute("action", WEB3FORMS_ACTION);
+      const hidden = Object.fromEntries(
+        Array.from(form.querySelectorAll('input[type="hidden"]')).map((i) => [i.getAttribute("name"), i.getAttribute("value")]),
+      );
+      expect(hidden).toEqual({
+        access_key: "b24cc743-7a95-4a52-9fcc-5427cf5e251b",
+        subject: "Virtual Museum ticket — returningsands.org",
+        from_name: "Returning Sands website",
+        redirect: "https://returningsands.org/museum/thanks",
+        botcheck: "",
+      });
+      // Required consent checkbox whose value is the consent sentence (the
+      // relayed email is the consent record).
+      const consent = form.querySelector('input[type="checkbox"][name="consent"]')!;
+      expect(consent).toBeRequired();
+      expect(consent).toBeEnabled();
+      expect(consent).toHaveAttribute("value", museum.ticket.consentText);
+      expect(form.querySelector(`label[for="${consent.id}"]`)).toHaveTextContent(museum.ticket.consentText);
+    }
 
     const inputs = container.querySelectorAll('input[type="email"]');
     expect(inputs).toHaveLength(2);
-    for (const input of Array.from(inputs)) expect(input).toBeDisabled();
+    for (const input of Array.from(inputs)) {
+      expect(input).toBeEnabled();
+      expect(input).toBeRequired();
+      expect(input).toHaveAttribute("name", "email");
+    }
     const ids = Array.from(inputs).map((i) => i.id);
     expect(new Set(ids).size).toBe(2);
     expect(ids).toEqual(["ticket-hero", "ticket-footer"]);
     // Each input has a visible, associated label (Req 9.1).
     for (const id of ids) expect(container.querySelector(`label[for="${id}"]`)).toHaveTextContent(museum.ticket.label);
 
-    expect(container.querySelectorAll("form")).toHaveLength(0);
-    expect(container.querySelectorAll("button")).toHaveLength(0);
+    expect(screen.getAllByRole("button", { name: "Reserve my ticket" })).toHaveLength(2);
+    expect(container.querySelectorAll("button")).toHaveLength(2);
+    // No provider script, no mailto inviting submissions (Req 8.9, 9.7).
+    expect(container.querySelectorAll("script")).toHaveLength(0);
     expect(screen.queryByText(/mailto:/)).toBeNull();
     expect(container.querySelector('a[href^="mailto:"]')).toBeNull();
   });
 
   it("places the first ticket before 'What it is' and the second after 'Roadmap' (Req 8.1a, 8.1e)", () => {
     render(<MuseumPage />);
-    const [first, second] = screen.getAllByText(TICKET_DESK);
+    const [first, second] = screen.getAllByRole("button", { name: "Reserve my ticket" });
     const whatItIs = screen.getByRole("heading", { level: 2, name: "What it is" });
     const roadmap = screen.getByRole("heading", { level: 2, name: "Roadmap" });
     expect(first.compareDocumentPosition(whatItIs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(roadmap.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("uses the 'to be confirmed' privacy wording with no provider name (Req 17.11)", () => {
+  it("names Web3Forms in both privacy notes and drops the 'to be confirmed' wording (Req 17.10)", () => {
     render(<MuseumPage />);
-    expect(screen.getAllByText(museum.ticket.privacyNoteProviderTbc)).toHaveLength(2);
-    expect(screen.queryByText(/Handled by/)).toBeNull();
+    expect(screen.getAllByText(/Handled by Web3Forms \(relayed to info@returningsands\.org\)\./)).toHaveLength(2);
+    expect(screen.queryByText(museum.ticket.privacyNoteProviderTbc)).toBeNull();
   });
 
   it("shows the work-of-Amer dashed note inside 'What it is' with no brackets (Req 8.5)", () => {
@@ -157,7 +188,37 @@ describe("Roadmap component", () => {
   });
 });
 
-describe("/museum with the Email_Provider and funder acknowledgement filled", () => {
+describe("/museum with the Email_Provider emptied again (Req 9.4, 9.8, 17.11)", () => {
+  let Page: typeof MuseumPage;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.doMock("@/content/site", async (importOriginal) => {
+      const mod = await importOriginal<typeof import("@/content/site")>();
+      return { site: { ...mod.site, pending: { ...mod.site.pending, emailProvider: null } } };
+    });
+    Page = (await import("@/app/museum/page")).default;
+  });
+
+  afterEach(() => {
+    vi.doUnmock("@/content/site");
+    vi.resetModules();
+  });
+
+  it("renders two disabled tickets, no form, no button, and the TBC privacy wording", () => {
+    const { container } = render(<Page />);
+    expect(screen.getAllByText(TICKET_DESK)).toHaveLength(2);
+    expect(container.querySelectorAll("form")).toHaveLength(0);
+    expect(container.querySelectorAll("button")).toHaveLength(0);
+    const inputs = container.querySelectorAll("input");
+    expect(inputs).toHaveLength(4); // 2 email + 2 consent, all disabled
+    for (const input of Array.from(inputs)) expect(input).toBeDisabled();
+    expect(screen.getAllByText(museum.ticket.privacyNoteProviderTbc)).toHaveLength(2);
+    expect(screen.queryByText(/Handled by/)).toBeNull();
+  });
+});
+
+describe("/museum with a different Email_Provider and the funder acknowledgement filled", () => {
   const PROVIDER: EmailProviderConfig = {
     provider: "Buttondown",
     actionUrl: "https://buttondown.com/api/emails/embed-subscribe/returningsands",
@@ -193,19 +254,22 @@ describe("/museum with the Email_Provider and funder acknowledgement filled", ()
     vi.resetModules();
   });
 
-  it("renders two live forms posting to the provider with redirect fields and submit buttons (Req 8.2, 9.2, 9.3)", () => {
+  it("switching provider changes only the action, hidden fields and note (Req 8.2, 9.2, 9.3)", () => {
     const { container } = render(<Page />);
     const forms = container.querySelectorAll("form");
     expect(forms).toHaveLength(2);
     for (const form of Array.from(forms)) {
       expect(form).toHaveAttribute("method", "post");
       expect(form).toHaveAttribute("action", PROVIDER.actionUrl);
+      expect(form.querySelectorAll('input[type="hidden"]')).toHaveLength(1);
       expect(form.querySelector('input[type="hidden"][name="redirect"]')).toHaveAttribute(
         "value",
         "https://returningsands.org/museum/thanks",
       );
       expect(form.querySelector('input[type="email"]')).toBeEnabled();
+      expect(form.querySelector('input[type="checkbox"][name="consent"]')).toBeRequired();
     }
+    expect(container.textContent).not.toContain("Web3Forms");
     expect(screen.getAllByRole("button", { name: "Reserve my ticket" })).toHaveLength(2);
     expect(screen.queryByText(TICKET_DESK)).toBeNull();
     expect(container.querySelectorAll("script")).toHaveLength(0);

@@ -11,14 +11,17 @@ import { ExternalLink } from "./ExternalLink";
 // `<nav aria-label="Footer">` links to every Page including `/museum` and
 // `/privacy`; Instagram and LinkedIn icon links go through ExternalLink; the
 // legal block shows the three company registration fields only when all three
-// are present, otherwise the fixed fallback line. `new Date()` runs at build
-// time because every route is static (17.3).
+// are present, otherwise the company number alone when `site.companyNumber`
+// is set, otherwise the fixed fallback line. `new Date()` runs at build time
+// because every route is static (17.3).
 
 type CompanyRegistration = SiteContent["pending"]["companyRegistration"];
 
 type FooterProps = {
   /** Defaults to the site Placeholder; injectable for tests. */
   companyRegistration?: CompanyRegistration;
+  /** Defaults to `site.companyNumber`; injectable for tests. */
+  companyNumber?: string;
 };
 
 const FOOTER_LINKS: { label: string; href: string }[] = [
@@ -39,6 +42,17 @@ const FOOTER_LINKS: { label: string; href: string }[] = [
 
 const FALLBACK_LEGAL = "Returning Sands CIC · Company details to follow";
 
+/**
+ * Legal line: the full registration when the all-or-nothing group is filled;
+ * otherwise the company number alone when known (registered office still to
+ * follow); otherwise the fixed fallback.
+ */
+export function legalLine(reg: CompanyRegistration, companyNumber: string): string {
+  if (allFilled(reg)) return `${reg.name} · Company no. ${reg.number} · ${reg.address}`;
+  if (present(companyNumber)) return `Returning Sands CIC · Company no. ${companyNumber} · Registered office to follow`;
+  return FALLBACK_LEGAL;
+}
+
 // Grouped Placeholders are all-or-nothing (17.1, 17.2): a partially filled
 // registration is treated as empty so no single field ever leaks on its own.
 function allFilled(
@@ -50,7 +64,10 @@ function allFilled(
 const LINK =
   "font-mono text-xs uppercase tracking-wider text-ink hover:text-ochre-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nile-800";
 
-export function Footer({ companyRegistration = site.pending.companyRegistration }: FooterProps) {
+export function Footer({
+  companyRegistration = site.pending.companyRegistration,
+  companyNumber = site.companyNumber,
+}: FooterProps) {
   const year = new Date().getUTCFullYear();
 
   return (
@@ -118,11 +135,7 @@ export function Footer({ companyRegistration = site.pending.companyRegistration 
       </ul>
 
       <div className="mt-8 font-mono text-xs leading-relaxed text-ink/80">
-        <p>
-          {allFilled(companyRegistration)
-            ? `${companyRegistration.name} · Company no. ${companyRegistration.number} · ${companyRegistration.address}`
-            : FALLBACK_LEGAL}
-        </p>
+        <p>{legalLine(companyRegistration, companyNumber)}</p>
         <p>© {year} Returning Sands CIC</p>
       </div>
     </div>

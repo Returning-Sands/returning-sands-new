@@ -14,7 +14,7 @@ export const metadata = pageMetadata("privacy", "/privacy");
 // it lives here rather than in a Content_File. The one editorial sentence, how
 // Admission_Ticket emails are used, is read from `museum.ticket.privacyNote`
 // so the ticket and this page can never disagree (17.9). The Email_Provider
-// name is the only Placeholder-dependent piece: present -> "stored with
+// name is the only Placeholder-dependent piece: present -> "relayed by
 // {provider}", pending -> the to-be-confirmed sentence, never a blank (17.11).
 export const PRIVACY_COPY = {
   title: "Privacy",
@@ -34,7 +34,7 @@ export const PRIVACY_COPY = {
     "If you reserve a ticket for the Virtual Museum, we ask for your email address and nothing else.",
   emailUse: museum.ticket.privacyNote,
   providerNamed: (provider: string) =>
-    `Emails are stored with ${provider}. You can unsubscribe at any time using the link in any email we send.`,
+    `Sign-ups are relayed by ${provider}; the email we receive is the consent record. You can unsubscribe at any time by replying to any email we send.`,
   providerTbc: "Our email provider is to be confirmed and will be named here.",
   contact: "Questions about this page or your data? Reach the team via our",
   contactLinkLabel: "Support page",

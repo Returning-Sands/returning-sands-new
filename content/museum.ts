@@ -73,6 +73,8 @@ export const museum: MuseumContent = {
   ticket: {
     label: "Your email address",
     buttonLabel: "Reserve my ticket",
+    consentText:
+      "Yes, email me occasionally about events, the film and how donations are used. Unsubscribe any time.",
     privacyNote:
       "We will use your email only to let you know when the Virtual Museum opens, and for nothing else.",
     privacyNoteProviderTbc:

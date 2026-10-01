@@ -8,6 +8,7 @@
  * the file system or the real content.
  */
 
+import { OPTIONAL_BANK_FIELDS } from "./donate";
 import { isPending } from "./pending";
 
 /** `pending` objects keyed by Content_File name, e.g. `{ site: site.pending }`. */
@@ -25,6 +26,12 @@ export const PARTIAL_SUFFIX = "(partially filled — treated as empty)";
  * own line as `pending.<key>.<field>`.
  */
 const PER_FIELD_KEYS: ReadonlySet<string> = new Set(["contactEmails"]);
+
+/**
+ * Optional fields inside a grouped Placeholder. Absent or blank, they do not
+ * make the group "partially filled" (mirrors `partialGroupWarnings`).
+ */
+const OPTIONAL_GROUP_FIELDS: Readonly<Record<string, readonly string[]>> = { bankDetails: OPTIONAL_BANK_FIELDS };
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -61,8 +68,10 @@ export function summarizePending(groups: PendingGroups): string[] {
 
       if (isPending(value)) {
         items.push(line(file, key));
-      } else if (isRecord(value) && Object.values(value).some(isPending)) {
-        items.push(line(file, key, PARTIAL_SUFFIX));
+      } else if (isRecord(value)) {
+        const optional = OPTIONAL_GROUP_FIELDS[key] ?? [];
+        const partial = Object.entries(value).some(([k, v]) => !optional.includes(k) && isPending(v));
+        if (partial) items.push(line(file, key, PARTIAL_SUFFIX));
       }
     }
   }

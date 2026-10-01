@@ -29,6 +29,7 @@ import { film as realFilm } from "@/content/film";
 import { museum as realMuseum } from "@/content/museum";
 
 import { DESIGN_ASSET_PATHS } from "./assetPaths";
+import { OPTIONAL_BANK_FIELDS } from "./donate";
 import { isPending } from "./pending";
 import type {
   City,
@@ -539,6 +540,7 @@ export function validateDonate(content: DonateContent): string[] {
   }
 
   requireText(e, f, "uk", "title", content.uk?.title);
+  requireText(e, f, "uk", "intro", content.uk?.intro);
   requireText(e, f, "uk", "stripeLabel", content.uk?.stripeLabel);
   requireText(e, f, "uk", "fallbackText", content.uk?.fallbackText);
   requireText(e, f, "uk", "fallbackButtonLabel", content.uk?.fallbackButtonLabel);
@@ -546,6 +548,7 @@ export function validateDonate(content: DonateContent): string[] {
 
   requireText(e, f, "statements", "notForProfit", content.statements?.notForProfit);
   requireText(e, f, "statements", "notACharity", content.statements?.notACharity);
+  requireText(e, f, "donate", "contactLine", content.contactLine);
 
   return e;
 }
@@ -652,10 +655,12 @@ export function validateMuseum(content: MuseumContent): string[] {
   if (content.ticket?.buttonLabel !== "Reserve my ticket") {
     e.push(err(f, "ticket", "buttonLabel", `must be exactly "Reserve my ticket" (got ${quote(content.ticket?.buttonLabel)})`));
   }
+  requireText(e, f, "ticket", "consentText", content.ticket?.consentText);
   requireLength(e, f, "ticket", "privacyNote", content.ticket?.privacyNote, 1, 160);
   requireLength(e, f, "ticket", "privacyNoteProviderTbc", content.ticket?.privacyNoteProviderTbc, 1, 160);
   copy.push(
     { item: "ticket", field: "label", text: content.ticket?.label },
+    { item: "ticket", field: "consentText", text: content.ticket?.consentText },
     { item: "ticket", field: "privacyNote", text: content.ticket?.privacyNote },
     { item: "ticket", field: "privacyNoteProviderTbc", text: content.ticket?.privacyNoteProviderTbc },
   );
@@ -694,18 +699,20 @@ export function validateMuseum(content: MuseumContent): string[] {
  * reported as a warning (design.md "Placeholder build summary").
  */
 export function partialGroupWarnings(content: ContentSet): string[] {
-  const groups: { file: ContentFile; key: string; value: unknown }[] = [
+  const groups: { file: ContentFile; key: string; value: unknown; optional?: readonly string[] }[] = [
     { file: "site", key: "companyRegistration", value: content.site.pending?.companyRegistration },
     { file: "site", key: "funderAcknowledgement", value: content.site.pending?.funderAcknowledgement },
     { file: "site", key: "emailProvider", value: content.site.pending?.emailProvider },
-    { file: "donate", key: "bankDetails", value: content.donate.pending?.bankDetails },
+    { file: "donate", key: "bankDetails", value: content.donate.pending?.bankDetails, optional: OPTIONAL_BANK_FIELDS },
   ];
 
   const warnings: string[] = [];
-  for (const { file, key, value } of groups) {
+  for (const { file, key, value, optional = [] } of groups) {
     if (!value || typeof value !== "object" || isPending(value)) continue;
+    // Optional fields (bank `iban` / `bic`) may be absent or blank without
+    // making the group "partially filled".
     const empty = Object.entries(value)
-      .filter(([, v]) => v !== undefined && isPending(v))
+      .filter(([k, v]) => v !== undefined && !optional.includes(k) && isPending(v))
       .map(([k]) => k);
     if (empty.length > 0) {
       warnings.push(

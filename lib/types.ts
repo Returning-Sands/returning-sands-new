@@ -68,8 +68,8 @@ export type DesignAssetKey =
 // content/site.ts — SiteContent
 // ---------------------------------------------------------------------------
 
-/** Keys of the contact-email Placeholder group (defaults from Req 11.2). */
-export type ContactKey = "general" | "yusef" | "paris" | "camilla" | "cillian";
+/** Keys of the contact-email Placeholder group (defaults from Req 11.2, plus the donations inbox). */
+export type ContactKey = "general" | "donations" | "yusef" | "paris" | "camilla" | "cillian";
 
 /** A named contact on `/support`; `confirmed` false routes mail to the general address (Req 11.10). */
 export type Contact = { key: ContactKey; name: string; role: string; confirmed: boolean };
@@ -100,6 +100,12 @@ export type SiteContent = {
   };
   campaign: { museumTeaser: string; donateLine: string };
   support: { contacts: Contact[] }; // general first, then named (11.2)
+  /**
+   * Companies House number on its own. `pending.companyRegistration` is an
+   * all-or-nothing group (name, number, address); until the registered
+   * office is known this single field lets the Footer show the number.
+   */
+  companyNumber: string;
   pages: Record<PageKey, { title: string; description: string }>; // SEO per route (16.1)
   designAssets: Record<DesignAssetKey, boolean>; // 20.5 flags
   instagramGrid?: { src: string; alt: string; href: string }[]; // <= 12 (22.2)
@@ -181,19 +187,35 @@ export type PartnersContent = { heading: string; partners: Partner[]; pending: R
 // content/donate.ts — DonateContent
 // ---------------------------------------------------------------------------
 
+/**
+ * UK bank details group. The three core fields decide whether the group is
+ * shown (all-or-nothing, Req 12.4/12.12); `iban` and `bic` are optional extras
+ * rendered as further rows when present.
+ */
+export type BankDetails = {
+  accountName: string;
+  sortCode: string;
+  accountNumber: string;
+  iban?: string;
+  bic?: string;
+};
+
 export type DonateContent = {
   us: { title: string; tagline: string; primary: LinkButton; secondary: LinkButton };
   uk: {
     title: string;
+    intro: string; // sentence above the card button
     stripeLabel: string;
     fallbackText: string;
     fallbackButtonLabel: string;
     referenceInstruction: string;
   };
   statements: { notForProfit: string; notACharity: string };
+  /** "Questions about giving? Email" — the donations address is appended from `site.pending.contactEmails.donations`. */
+  contactLine: string;
   pending: {
     stripePaymentLink: Pending<string>;
-    bankDetails: Pending<{ accountName: string; sortCode: string; accountNumber: string }>;
+    bankDetails: Pending<BankDetails>;
   };
 };
 
@@ -230,6 +252,8 @@ export type MuseumContent = {
   ticket: {
     label: string;
     buttonLabel: "Reserve my ticket";
+    /** Label of the required consent checkbox; posted as the `consent` field so the provider email is the consent record. */
+    consentText: string;
     privacyNote: string;
     privacyNoteProviderTbc: string;
   };

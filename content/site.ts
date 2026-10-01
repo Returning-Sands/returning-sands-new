@@ -11,6 +11,18 @@ import type { SiteContent } from "@/lib/types";
  *   Mission is rendered as "written, painted, produced" (Req 3.3).
  * - STILL DRAFTED (needs sign-off): campaign.museumTeaser, campaign.donateLine,
  *   and every title/description in `pages`.
+ * - CONTACTS: `general` and `donations` are confirmed inboxes. The four named
+ *   contacts (yusef, paris, camilla, cillian) stay `confirmed: false` until the
+ *   owner confirms each address is live; until then their links route to the
+ *   general inbox (Req 11.10).
+ * - `companyNumber` is the Companies House number on its own; the grouped
+ *   `pending.companyRegistration` stays null until the registered office
+ *   address is known (all-or-nothing group).
+ * - `pending.emailProvider` is Web3Forms (ported from the Old_Site, 2026-10-01):
+ *   the form posts to api.web3forms.com, which relays the fields to
+ *   info@returningsands.org. The `redirect` hidden field uses the PRODUCTION
+ *   origin, so on the preview deployment a successful submit lands on the old
+ *   site's /museum/thanks (a 404) until cutover — accepted for now.
  */
 export const site: SiteContent = {
   name: "Returning Sands",
@@ -83,12 +95,15 @@ export const site: SiteContent = {
   support: {
     contacts: [
       { key: "general", name: "Returning Sands", role: "General enquiries", confirmed: true },
+      { key: "donations", name: "Donations team", role: "Giving and receipts", confirmed: true },
       { key: "yusef", name: "Yusef Bushara", role: "Producer · Co-Founder", confirmed: false },
       { key: "paris", name: "Paris Quetzal Sistilli", role: "Producer · Co-Founder", confirmed: false },
       { key: "camilla", name: "Camilla Marchese González", role: "Producer · Co-Founder", confirmed: false },
       { key: "cillian", name: "Cillian Lavelle", role: "Finance Coordinator", confirmed: false },
     ],
   },
+
+  companyNumber: "17311689",
 
   pages: {
     home: {
@@ -182,11 +197,27 @@ export const site: SiteContent = {
 
   pending: {
     campaignOverview: "",
-    emailProvider: null,
+    emailProvider: {
+      provider: "Web3Forms (relayed to info@returningsands.org)",
+      actionUrl: "https://api.web3forms.com/submit",
+      hiddenFields: {
+        // Public by design: the key only lets this site submit to the form
+        // that forwards to info@returningsands.org.
+        access_key: "b24cc743-7a95-4a52-9fcc-5427cf5e251b",
+        subject: "Virtual Museum ticket — returningsands.org",
+        from_name: "Returning Sands website",
+        // Production origin on purpose (Req 9.3); see REVIEW NOTES above.
+        redirect: "https://returningsands.org/museum/thanks",
+        // Honeypot: Web3Forms drops any submission where this is filled.
+        botcheck: "",
+      },
+      emailFieldName: "email",
+    },
     funderAcknowledgement: null,
     companyRegistration: null,
     contactEmails: {
       general: "info@returningsands.org",
+      donations: "donations@returningsands.org",
       yusef: "yusef@returningsands.org",
       paris: "paris@returningsands.org",
       camilla: "camilla@returningsands.org",

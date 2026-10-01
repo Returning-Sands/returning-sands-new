@@ -86,11 +86,28 @@ describe("summarizePending", () => {
       museum: museum.pending,
     });
     expect(out[0]).toMatch(/^Outstanding Placeholders \(\d+\):$/);
-    expect(out).toContain("  content/donate.ts   pending.stripePaymentLink");
     expect(out).toContain("  content/film.ts   pending.trailerUrl");
-    expect(out).toContain("  content/site.ts   pending.emailProvider");
+    expect(out).toContain("  content/site.ts   pending.companyRegistration");
+    // Filled on 2026-10-01 (ported from the Old_Site): no longer listed, and
+    // the filled bank group (with iban/bic) is not reported as partial.
+    expect(out.join("\n")).not.toContain("pending.stripePaymentLink");
+    expect(out.join("\n")).not.toContain("pending.bankDetails");
+    expect(out.join("\n")).not.toContain("pending.emailProvider");
     // Header count matches the number of item lines.
     const n = Number(/\((\d+)\)/.exec(out[0])?.[1]);
     expect(out.length).toBe(n + 1);
+  });
+
+  it("ignores the optional iban / bic fields when deciding whether the bank group is partial", () => {
+    const core = { accountName: "Returning Sands CIC", sortCode: "08-92-99", accountNumber: "67540396" };
+    expect(summarizePending({ donate: { bankDetails: { ...core, iban: "", bic: "" } } })).toEqual([
+      NO_PLACEHOLDERS_LINE,
+    ]);
+    expect(summarizePending({ donate: { bankDetails: { ...core, iban: "GB00" } } })).toEqual([NO_PLACEHOLDERS_LINE]);
+    // A blank core field is still partial even when the extras are filled.
+    expect(summarizePending({ donate: { bankDetails: { ...core, sortCode: "", iban: "GB00", bic: "X" } } })).toEqual([
+      "Outstanding Placeholders (1):",
+      `  content/donate.ts   pending.bankDetails   ${PARTIAL_SUFFIX}`,
+    ]);
   });
 });

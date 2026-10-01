@@ -348,5 +348,22 @@ describe("validateAll with corrupted content", () => {
     expect(warnings[0]).toContain("[content/site.ts] pending.companyRegistration: partially filled");
     expect(warnings[0]).toContain('"number", "address"');
     expect(warnings[1]).toContain("[content/donate.ts] pending.bankDetails: partially filled");
+    expect(warnings[1]).toContain('"accountNumber"');
+  });
+
+  it("does not warn about the optional iban / bic bank fields when they are absent or blank", () => {
+    const content: ContentSet = clone(realContent);
+    const core = { accountName: "Returning Sands CIC", sortCode: "08-92-99", accountNumber: "67540396" };
+    content.donate.pending.bankDetails = core;
+    expect(validateAll(content).warnings).toEqual([]);
+    content.donate.pending.bankDetails = { ...core, iban: "", bic: "   " };
+    expect(validateAll(content).warnings).toEqual([]);
+    // The real content (all five filled) produces no warning either.
+    expect(validateAll(clone(realContent)).warnings).toEqual([]);
+    // A blank core field still warns, naming only that field.
+    content.donate.pending.bankDetails = { ...core, accountName: "", iban: "", bic: "" };
+    const { warnings } = validateAll(content);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('until "accountName" is filled');
   });
 });

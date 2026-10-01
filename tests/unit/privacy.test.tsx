@@ -6,19 +6,15 @@ import { museum } from "@/content/museum";
 import { site } from "@/content/site";
 
 // Privacy page (Req 17.8, 17.9, 17.11, 18.3, 18.4). Rendered once against the
-// real Content_File (Email_Provider pending) and once with a populated provider
-// swapped in via `vi.doMock`, so both branches of 17.9/17.11 are exercised.
+// real Content_File (Email_Provider = Web3Forms, live) and once with the
+// provider emptied again via `vi.doMock`, so both branches of 17.9/17.11 are
+// exercised.
 
 afterEach(cleanup);
 
-const BUTTONDOWN = {
-  provider: "Buttondown",
-  actionUrl: "https://buttondown.com/api/emails/embed-subscribe/rs",
-  hiddenFields: {},
-  emailFieldName: "email",
-};
+const WEB3FORMS = "Web3Forms (relayed to info@returningsands.org)";
 
-describe("/privacy with the real (pending) content", () => {
+describe("/privacy with the real content (Email_Provider populated)", () => {
   it("uses the privacy metadata and canonical (Req 16.1, 16.2)", () => {
     expect(metadata.title).toBe(site.pages.privacy.title);
     expect(metadata.description).toBe(site.pages.privacy.description);
@@ -48,14 +44,14 @@ describe("/privacy with the real (pending) content", () => {
     expect(museum.ticket.privacyNote).toMatch(/nothing else/);
   });
 
-  it("shows the provider-TBC sentence and never a provider name or 'stored with' gap (Req 17.11)", () => {
+  it("names the relay provider and the consent record, and drops the to-be-confirmed wording (Req 17.9, 17.11)", () => {
     const { container } = render(<PrivacyPage />);
-    expect(site.pending.emailProvider).toBeNull();
-    expect(screen.getByText(PRIVACY_COPY.providerTbc)).toBeInTheDocument();
+    expect(site.pending.emailProvider).toMatchObject({ provider: WEB3FORMS });
     const text = container.textContent ?? "";
-    expect(text).toContain("to be confirmed");
+    expect(text).toContain(`Sign-ups are relayed by ${WEB3FORMS}; the email we receive is the consent record.`);
+    expect(screen.getByText(PRIVACY_COPY.providerNamed(WEB3FORMS))).toBeInTheDocument();
+    expect(text).not.toContain("to be confirmed");
     expect(text).not.toContain("stored with");
-    expect(text).not.toContain("Buttondown");
     // No paragraph is left empty where the name would have gone.
     for (const p of Array.from(container.querySelectorAll("p"))) {
       expect(p.textContent?.trim()).not.toBe("");
@@ -76,7 +72,7 @@ describe("/privacy with the real (pending) content", () => {
   });
 });
 
-describe("/privacy with the Email_Provider populated", () => {
+describe("/privacy with the Email_Provider emptied again", () => {
   let Page: typeof PrivacyPage;
 
   beforeEach(async () => {
@@ -84,7 +80,7 @@ describe("/privacy with the Email_Provider populated", () => {
     vi.doMock("@/content/site", async (importOriginal) => {
       const mod = await importOriginal<typeof import("@/content/site")>();
       return {
-        site: { ...mod.site, pending: { ...mod.site.pending, emailProvider: BUTTONDOWN } },
+        site: { ...mod.site, pending: { ...mod.site.pending, emailProvider: null } },
       };
     });
     Page = (await import("@/app/privacy/page")).default;
@@ -95,12 +91,16 @@ describe("/privacy with the Email_Provider populated", () => {
     vi.resetModules();
   });
 
-  it("names the provider and drops the to-be-confirmed wording (Req 17.9, 17.11)", () => {
+  it("shows the provider-TBC sentence and never a provider name or 'relayed by' gap (Req 17.11)", () => {
     const { container } = render(<Page />);
+    expect(screen.getByText(PRIVACY_COPY.providerTbc)).toBeInTheDocument();
     const text = container.textContent ?? "";
-    expect(text).toContain("Buttondown");
-    expect(text).toContain("Emails are stored with Buttondown.");
-    expect(text).not.toContain("to be confirmed");
+    expect(text).toContain("to be confirmed");
+    expect(text).not.toContain("relayed by");
+    expect(text).not.toContain("Web3Forms");
+    for (const p of Array.from(container.querySelectorAll("p"))) {
+      expect(p.textContent?.trim()).not.toBe("");
+    }
     // The unaffected sections are unchanged.
     expect(text).toContain("cookie-less");
     expect(screen.getByText(museum.ticket.privacyNote)).toBeInTheDocument();
