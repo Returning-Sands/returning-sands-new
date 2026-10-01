@@ -49,6 +49,11 @@ Summary: 8 confirmed, 2 corrected (items 6 and 8), plus a few sharp edges to car
 - Static or not: "By default, generated images are statically optimized (generated at build time and cached) unless they use Request-time APIs or uncached data." `params` is not a request-time API, so with `generateStaticParams()` on the sibling `page.tsx` returning the three cities, the three city images prerender. Without `cacheComponents`, the route table should show `○` for them. Verify in the task-9 build output.
 - `opengraph-image` is a specialised Route Handler and accepts the same route segment config as pages (so `dynamic = "error"` on the root layout covers it).
 
+**Correction (found in task 12.1).** Two of the statements above did not survive the build:
+
+- (a) A `[param]/opengraph-image.tsx` route needs its **own** `export function generateStaticParams()` (plus `export const dynamicParams = false`). The sibling `page.tsx`'s `generateStaticParams` does **not** carry over to the image route; without it the image route builds as `ƒ` (dynamic) and fails the deploy gate. `app/campaign/[city]/opengraph-image.tsx` now exports both, returning the same three cities as the page.
+- (b) Satori's Google-Fonts fallback for Arabic fails at build time with `lookupType: 5 - substFormat: 3 is not yet supported` (the fetched Noto Naskh Arabic file uses a GSUB lookup Satori's OpenType parser cannot read). The share cards therefore render Latin text only until an Arabic-capable `.ttf`/`.woff` is added under `public/fonts/` and registered in `lib/og/fonts.ts`; `DESIGN_ASSETS.md` records the same limitation for the designer.
+
 ## 3. `not-found.tsx` — CONFIRMED
 
 - `app/not-found.tsx` handles every unmatched URL app-wide and renders **inside the root layout** (Top_Nav + Footer come for free, Req 1.9). Takes no props. Default is a Server Component.
